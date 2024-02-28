@@ -3,14 +3,13 @@ const mongoose = require("mongoose");
 
 // create New User - POST
 const addnewuser = async (req, res) => {
-  const { firstName, lastName, email, password, confirmPassword } = req.body;
+  const { about, eduSkills, contacts, experience } = req.body;
   try {
     const user = await userModel.create({
-      firstName,
-      lastName,
-      email,
-      password,
-      confirmPassword,
+      about,
+      eduSkills,
+      contacts,
+      experience,
     });
     res.status(200).json(user);
   } catch (e) {
@@ -28,58 +27,29 @@ const getalluser = async (req, res) => {
   }
 };
 
-// get all user data - GET
+// get a specific user data - GET
 const getuser = async (req, res) => {
   const { id } = req.params;
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(404).json({ message: "User not found!.." });
-  }
+
   try {
-    const user = await userModel.findById(id);
+    const user = await userModel.findOne({ "about.userid": id });
     res.status(200).json(user);
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
 };
 
-//Update user data - PATCH
-const updateuser = async (req, res) => {
-  const { id } = req.params;
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(404).json({ message: "User not found!.." });
-  }
-  try {
-    const user = await userModel.findByIdAndUpdate(
-      {
-        _id: id,
-      },
-      {
-        ...req.body,
-      }
-    );
-    res.status(200).json(user);
-  } catch (e) {
-    res.status(400).json({ error: e.message });
-  }
-};
 
-// delete user - DELETE
+// // delete user - DELETE
 const deleteuser = async (req, res) => {
   const { id } = req.params;
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(404).json({ message: "User not found!.." });
-  }
+
   try {
-    const user = await userModel.findByIdAndDelete(
-      {
-        _id: id,
-      },
-      {}
-    );
+    const user = await userModel.findOneAndDelete({ "about.userid": id }, {});
     res.status(200).json(user);
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
 };
 
-module.exports = { addnewuser, getalluser, getuser, updateuser, deleteuser };
+module.exports = { addnewuser, getalluser, getuser, deleteuser };

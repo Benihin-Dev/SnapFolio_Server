@@ -3,14 +3,42 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const app = express();
 require("dotenv").config();
-const userDataRouter = require("./router");
+const snapfolioUserDataRouter = require("./router");
+app.use(cors());
+const fs = require("fs");
+const util = require("util");
+const unlinkFile = util.promisify(fs.unlink);
+
+const multer = require("multer");
+const upload = multer({ dest: "uploads/" });
+
+const { uploadFile, getFileStream } = require("./s3");
+
+app.post("/uploadprofilepic", upload.single("image"), async (req, res) => {
+  const file = req.file;
+  console.log(file);
+
+  const result = await uploadFile(file);
+  await unlinkFile(file.path);
+  console.log(result);
+  const description = req.body.description;
+  res.send({ imagePath: `${result.Key}` });
+});
+
+app.get("/uploadprofilepic/:key", (req, res) => {
+  console.log(req.params);
+  const key = req.params.key;
+  const readStream = getFileStream(key);
+
+  readStream.pipe(res);
+});
 
 app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res, next) => {
   console.log(req);
-  res.send("Hell000000");
+  res.send("Hello \n This server working for Snapfolio !..");
 });
 
 mongoose
@@ -27,7 +55,7 @@ mongoose
   });
 
 app.use(
-  "/userData",
+  "/snapfolio",
   (req, res, next) => {
     console.log(" ");
     console.log("Method is " + req.method);
@@ -35,7 +63,7 @@ app.use(
     console.log(" ");
     next();
   },
-  userDataRouter,
+  snapfolioUserDataRouter,
   () => {
     console.log("Hello");
   }
